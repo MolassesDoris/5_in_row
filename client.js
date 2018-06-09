@@ -9,19 +9,22 @@ var options = {
     }
 };
 
-var body = JSON.stringify({
-    foo: "bar",
-    type: "move"
-})
+// var body = JSON.stringify({
+//     foo: "bar",
+//     type: "move"
+// })
 var req = http.request(options, function(res){
   res.setEncoding('utf8');
-
-  res.on('data', function(chunk){
-    console.log('BODY:', chunk);
+  var body = ''
+  res.on('data', function(data){
+    body = data;
   });
 
   res.on('end', function(){
-    console.log('No more data in response.');
+    body = JSON.parse(body);
+    if(body['type'] == 'message'){
+      console.log(body['msg'])
+    }
   });
 });
 
@@ -29,21 +32,17 @@ req.on('error', function(e){
   console.log('Problem with request:', e.message);
 });
 
-
-// var request = new http.ClientRequest(options)
-// console.log(body)
-// request.end(body)
 var stdin = process.stdin, stdout = process.stdout
 
-var getName = function(){
-  console.log('please enter your name >');
+var join = function(){
+  console.log('Please Enter your Name >');
   // // resume initializes the stdin
   stdin.resume();
   stdin.setEncoding('utf8');
   stdin.once('data', function(data){
     var postData = JSON.stringify({
       name: data,
-      type: 'name'
+      type: 'join'
     });
     var parsed = JSON.parse(postData)
     req.write(postData);
@@ -52,4 +51,4 @@ var getName = function(){
   );
 }
 
-getName()
+join()

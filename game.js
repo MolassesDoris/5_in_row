@@ -2,12 +2,12 @@ class Connect5 {
    constructor() {
      this.cols = 9;
      this.rows = 6;
-     this.grid = [['0','0','0','0','0','0','0','0','0'],
-              ['0','0','0','0','0','0','0','0','0'],
-              ['0','0','0','0','0','0','0','0','0'],
-              ['0','0','0','0','0','0','0','0','0'],
-              ['0','0','0','0','0','0','0','0','0'],
-              ['0','0','0','0','0','0','0','0','0']];
+     this.grid = [['-','-','-','-','-','-','-','-','-'],
+              ['-','-','-','-','-','-','-','-','-'],
+              ['-','-','-','-','-','-','-','-','-'],
+              ['-','-','-','-','-','-','-','-','-'],
+              ['-','-','-','-','-','-','-','-','-'],
+              ['-','-','-','-','-','-','-','-','-']];
       this.players=[]
    }
 
@@ -15,7 +15,7 @@ class Connect5 {
      var colNums = Array.from(Array(9).keys());
      colNums = colNums.map(x=> x.toString()).join('   ');
      console.log(colNums);
-     console.log('-----------------------------------')
+     console.log('================================')
      for(var row of this.grid){
        var cleanedRow = []
        for(var column of row){
@@ -25,9 +25,18 @@ class Connect5 {
      }
    }
 
-   newPlayer(name, value) {
+   createNewPlayer(name) {
+     var value = this.players.length
      var player = new Player(name, value)
      this.players.push(player)
+   }
+
+   isReadyToPlay(){
+     if(this.players.length == 2){
+       return true;
+     }else{
+       return false;
+     }
    }
 
 }
@@ -40,5 +49,6 @@ class Player {
 }
 
 module.exports = {
-  game: Connect5
+  game: Connect5,
+  player: Player
 };
