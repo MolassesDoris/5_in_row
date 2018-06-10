@@ -27,7 +27,7 @@ var createRequest = function(){
         for(var line of body['grid']){
           console.log(line);
         }
-        askForMove()
+        askForMove(body)
       }
     });
   });
@@ -39,20 +39,23 @@ var createRequest = function(){
   return req;
 }
 
-var askForMove = function(){
+var askForMove = function(body){
+  console.log(body['name']+ ', it is your turn!');
+  console.log('Your icon is: ', body['value']);
   console.log('Enter a number between 0-8 to take turn:');
   var req = createRequest()
-  askForStdInput('move', req);
+  askForStdInput('move', req, body['token']);
 }
 
-var askForStdInput = function(typeOfInput, req){
+var askForStdInput = function(typeOfInput, req, clientToken = null){
   stdin.resume();
   stdin.setEncoding('utf8');
   stdin.once('data', function(d){
     d = d.trim();
     var postData = JSON.stringify({
       data: d,
-      type: typeOfInput
+      type: typeOfInput,
+      token: clientToken
     });
     var parsed = JSON.parse(postData)
     req.write(postData);

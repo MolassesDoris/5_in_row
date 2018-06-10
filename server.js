@@ -26,7 +26,10 @@ server.on('request', function(req, res){
     }else if(type == 'move'){
       console.log('Received Move')
       var move = body['data'];
-      game.makeMove(move);
+      var parsedToken = game.parseToken(body['token']);
+      var player = game.getPlayerWithName(parsedToken[0])
+      player.setResponseLoc(res);
+      game.makeMove(move, player);
     }
   });
 });

@@ -15,11 +15,11 @@ class Connect5 {
       this.pairedPlayers= []
    }
 
-   makeMove(column){
+   makeMove(column, player){
      var i = (this.grid[column].length)-1;
      while(i >= 0){
        if(this.grid[column][i] == '-'){
-         this.grid[column][i] = '0';
+         this.grid[column][i] = player.value.toString();
          break;
        }
        i-=1
@@ -27,6 +27,8 @@ class Connect5 {
      for(var entry of this.getPrintableGrid()){
        console.log(entry)
      }
+     player.turn+=1;
+     this.askForMove(player.opponent);
    }
 
    pairPlayerWithOpponent(player){
@@ -50,12 +52,30 @@ class Connect5 {
      return(printable);
    }
 
+   generateToken(player){
+     var token = player.name + '-!/=' + player.turn;
+     return token;
+   }
+
+   parseToken(token){
+     var splitToken = token.split('-!/=');
+     return splitToken;
+   }
+
+   getPlayerWithName(name){
+     var player = this.players.filter(p => p.name == name)[0]
+     return player;
+   }
+
    askForMove(player){
      var response = player.getResponseLoc();
      var gridMessage = this.getPrintableGrid()
      var gridData = JSON.stringify({
        grid : gridMessage,
-       type: 'grid'
+       type: 'grid',
+       token: this.generateToken(player),
+       name: player.name,
+       value: player.value
      });
      response.writeHead(200, {"Content-Type": "application/json"});
      response.end(gridData);
@@ -96,6 +116,7 @@ class Player {
     this.value = value;
     this.responseLoc = null;
     this.opponent = null;
+    this.turn = 0;
   }
 
   setResponseLoc(responseLoc){
