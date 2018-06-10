@@ -28,7 +28,45 @@ class Connect5 {
        console.log(entry)
      }
      player.turn+=1;
+     this.checkWinner(column, i, String(player.value))
      this.askForMove(player.opponent);
+   }
+
+   checkWinner(column, row, icon){
+     var results = []
+     results.push(this.checkHorizontal(row, icon));
+     results.push(this.checkVertical(column, icon));
+     console.log(results);
+   }
+
+   checkHorizontal(row, icon){
+     var numMatch = 0;
+     for(var i = 0; i<this.cols;i++){
+       if(this.grid[i][row] == icon){
+         numMatch+=1
+       }else{
+         numMatch=0
+       }
+       if(numMatch>=5){
+         return true;
+       }
+     }
+     return false;
+   }
+
+   checkVertical(column, icon){
+     var numMatch = 0;
+     for(var i = 0; i<this.rows;i++){
+       if(this.grid[column][i] == icon){
+         numMatch+=1
+       }else{
+         numMatch=0
+       }
+       if(numMatch>=5){
+         return true;
+       }
+     }
+     return false;
    }
 
    pairPlayerWithOpponent(player){
