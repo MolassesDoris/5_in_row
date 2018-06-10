@@ -2,41 +2,90 @@ class Connect5 {
    constructor() {
      this.cols = 9;
      this.rows = 6;
-     this.grid = [['-','-','-','-','-','-','-','-','-'],
-              ['-','-','-','-','-','-','-','-','-'],
-              ['-','-','-','-','-','-','-','-','-'],
-              ['-','-','-','-','-','-','-','-','-'],
-              ['-','-','-','-','-','-','-','-','-'],
-              ['-','-','-','-','-','-','-','-','-']];
-      this.players=[]
+     this.grid = [['-','-','-','-','-','-'],
+              ['-','-','-','-','-','-'],
+              ['-','-','-','-','-','-'],
+              ['-','-','-','-','-','-'],
+              ['-','-','-','-','-','-'],
+              ['-','-','-','-','-','-'],
+              ['-','-','-','-','-','-'],
+              ['-','-','-','-','-','-'],
+              ['-','-','-','-','-','-']];
+      this.players = []
+      this.pairedPlayers= []
    }
 
-   display() {
-     var colNums = Array.from(Array(9).keys());
-     colNums = colNums.map(x=> x.toString()).join('   ');
-     console.log(colNums);
-     console.log('================================')
-     for(var row of this.grid){
-       var cleanedRow = []
-       for(var column of row){
-         cleanedRow.push(column)
+   makeMove(column){
+     var i = (this.grid[column].length)-1;
+     while(i >= 0){
+       if(this.grid[column][i] == '-'){
+         this.grid[column][i] = '0';
+         break;
        }
-       console.log(cleanedRow.join('   '))
+       i-=1
+     }
+     for(var entry of this.getPrintableGrid()){
+       console.log(entry)
      }
    }
 
-   createNewPlayer(name) {
-     var value = this.players.length
-     var player = new Player(name, value)
-     this.players.push(player)
+   pairPlayerWithOpponent(player){
+     var opp = this.players.filter(p => player.name != p.name)[0];
+     player.opponent = opp;
    }
 
-   isReadyToPlay(){
-     if(this.players.length == 2){
-       return true;
-     }else{
-       return false;
+   getPrintableGrid() {
+     var colNums = Array.from(Array(this.cols).keys());
+     colNums = colNums.map(x=> x.toString()).join('   ');
+     var printable = [];
+     printable.push(colNums);
+     printable.push('================================');
+     for(var i=0; i <= this.rows-1; i++){
+       var cleanedRow = [];
+       for(var j=0; j <= this.cols-1; j++){
+         cleanedRow.push(this.grid[j][i]);
+       }
+       printable.push(cleanedRow.join('   '));
      }
+     return(printable);
+   }
+
+   askForMove(player){
+     var response = player.getResponseLoc();
+     var gridMessage = this.getPrintableGrid()
+     var gridData = JSON.stringify({
+       grid : gridMessage,
+       type: 'grid'
+     });
+     response.writeHead(200, {"Content-Type": "application/json"});
+     response.end(gridData);
+   }
+
+   handlePlayable(player){
+     console.log('Players can play now');
+     console.log(player.name + ' can play');
+     this.pairPlayerWithOpponent(player);
+     if(player.value<player.opponent.value){
+       this.askForMove(player);
+     }
+   }
+
+   createNewPlayer(name, response = null) {
+     // Create new players
+     // add player to list of game players
+     // if the player can play we send him a response
+     var value = this.players.length;
+     var player = new Player(name, value);
+     player.setResponseLoc(response);
+     this.players.push(player);
+     const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
+     const checkIfPlayable = async (player) => {
+       while(this.players.length<2){
+         await snooze(1000);
+       }
+       this.handlePlayable(player)
+     };
+     checkIfPlayable(player)
    }
 
 }
@@ -45,7 +94,17 @@ class Player {
   constructor(name, value){
     this.name = name;
     this.value = value;
+    this.responseLoc = null;
+    this.opponent = null;
   }
+
+  setResponseLoc(responseLoc){
+    this.responseLoc = responseLoc;
+  }
+  getResponseLoc(){
+    return this.responseLoc;
+  }
+
 }
 
 module.exports = {

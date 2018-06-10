@@ -6,22 +6,9 @@ var ConnectGame = require('./game').game;
 var game = new ConnectGame();
 
 var onJoin = function(body,res){
-  console.log(body['name'], ' has joined the lobby');
-  game.createNewPlayer(body['name'])
-  var ready = game.isReadyToPlay();
-  if(ready == false){
-    var message = 'You have joined the lobby but we are waiting for another to join';
-    var postData = JSON.stringify({
-      msg: message,
-      type: 'message'
-    });
-    console.log(postData)
-    res.writeHead(200, {"Content-Type": "application/json"});
-    res.end(postData);
-  }else{
-    game.display()
+  console.log(body['data'], ' has joined the lobby');
+  game.createNewPlayer(body['data'], res);
   }
-}
 
 server.on('request', function(req, res){
   if (req.method == 'POST'){
@@ -35,8 +22,12 @@ server.on('request', function(req, res){
     body = JSON.parse(body);
     var type = body['type'];
     if(type == 'join'){
-      onJoin(body, res)
-      }
+      onJoin(body, res);
+    }else if(type == 'move'){
+      console.log('Received Move')
+      var move = body['data'];
+      game.makeMove(move);
+    }
   });
 });
 console.log('Waiting for Players to Join')
