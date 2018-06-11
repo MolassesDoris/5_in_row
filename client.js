@@ -41,7 +41,7 @@ var createRequest = function(){
 
 var askForMove = function(body){
   console.log(body['name']+ ', it is your turn!');
-  console.log('Your icon is: ', body['value']);
+  console.log('Your icon is: ', body['icon']);
   console.log('Enter a number between 0-8 to take turn:');
   var req = createRequest()
   askForStdInput('move', req, body['token']);

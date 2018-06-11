@@ -18,6 +18,11 @@ server.on('request', function(req, res){
   req.on('data', function(data){
     body+=data;
   });
+  req.on("close", function() {
+    // request closed unexpectedly
+    console.log('Closed unexpectedly')
+  });
+
   req.on('end', function(){
     body = JSON.parse(body);
     var type = body['type'];

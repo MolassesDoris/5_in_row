@@ -19,7 +19,7 @@ class Connect5 {
      var i = (this.grid[column].length)-1;
      while(i >= 0){
        if(this.grid[column][i] == '-'){
-         this.grid[column][i] = player.value.toString();
+         this.grid[column][i] = player.gameIcon.toString();
          break;
        }
        i-=1
@@ -28,7 +28,7 @@ class Connect5 {
        console.log(entry)
      }
      player.turn+=1;
-     this.checkWinner(column, i, String(player.value))
+     this.checkWinner(column, i, String(player.gameIcon))
      this.askForMove(player.opponent);
    }
 
@@ -70,7 +70,7 @@ class Connect5 {
    }
 
    pairPlayerWithOpponent(player){
-     var opp = this.players.filter(p => player.name != p.name)[0];
+     var opp = this.players.find(p => player.name != p.name);
      player.opponent = opp;
    }
 
@@ -113,7 +113,8 @@ class Connect5 {
        type: 'grid',
        token: this.generateToken(player),
        name: player.name,
-       value: player.value
+       id: player.id,
+       icon: player.gameIcon
      });
      response.writeHead(200, {"Content-Type": "application/json"});
      response.end(gridData);
@@ -123,7 +124,9 @@ class Connect5 {
      console.log('Players can play now');
      console.log(player.name + ' can play');
      this.pairPlayerWithOpponent(player);
-     if(player.value<player.opponent.value){
+     if(player.id<player.opponent.id){
+       player.gameIcon = 'X';
+       player.opponent.gameIcon = 'O';
        this.askForMove(player);
      }
    }
@@ -132,8 +135,8 @@ class Connect5 {
      // Create new players
      // add player to list of game players
      // if the player can play we send him a response
-     var value = this.players.length;
-     var player = new Player(name, value);
+     var id = this.players.length;
+     var player = new Player(name, id);
      player.setResponseLoc(response);
      this.players.push(player);
      const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -149,9 +152,10 @@ class Connect5 {
 }
 
 class Player {
-  constructor(name, value){
+  constructor(name, id){
     this.name = name;
-    this.value = value;
+    this.id = id;
+    this.gameIcon = null;
     this.responseLoc = null;
     this.opponent = null;
     this.turn = 0;
