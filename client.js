@@ -23,11 +23,24 @@ var createRequest = function(){
       var type = body['type'];
       if(type == 'message'){
         console.log(body['msg'])
-      }else if(type == 'grid'){
+      }else if(type == 'moveQuery'){
         for(var line of body['grid']){
           console.log(line);
         }
-        askForMove(body)
+        makeMove(body['name'], body['icon'], body['token']);
+      } else if(type == 'joinSuccess'){
+        console.log('Game joined succesfully');
+        console.log('Waiting for Turn');
+        sendNotifyMeRequest(body['token']);
+      } else if(type == 'moveSuccess'){
+        for(var line of body['grid']){
+          console.log(line);
+        }
+        sendNotifyMeRequest(body['token']);
+      } else if(type == 'moveFailure'){
+        console.log('I\'m sorry the move you made isn\'t valid');
+        console.log('Please Enter a column between 0-8:');
+        makeMove(body['name'], body['icon'], body['token']);
       }
     });
   });
@@ -39,12 +52,23 @@ var createRequest = function(){
   return req;
 }
 
-var askForMove = function(body){
-  console.log(body['name']+ ', it is your turn!');
-  console.log('Your icon is: ', body['icon']);
+var sendRequest = function(req, data){
+  req.write(data);
+  req.end();
+}
+
+var sendNotifyMeRequest = function(clientToken){
+  sendRequest(createRequest(), JSON.stringify({
+    type: 'notifyMe',
+    token: clientToken
+  }));
+}
+var makeMove = function(name, icon, token){
+  console.log(name+ ', it is your turn!');
+  console.log('Your icon is: ', icon);
   console.log('Enter a number between 0-8 to take turn:');
-  var req = createRequest()
-  askForStdInput('move', req, body['token']);
+  var moveInputReq = createRequest()
+  askForStdInput('move', moveInputReq, token);
 }
 
 var askForStdInput = function(typeOfInput, req, clientToken = null){
@@ -57,9 +81,7 @@ var askForStdInput = function(typeOfInput, req, clientToken = null){
       type: typeOfInput,
       token: clientToken
     });
-    var parsed = JSON.parse(postData)
-    req.write(postData);
-    req.end();
+    sendRequest(req, postData);
   }
   );
 }
@@ -67,7 +89,7 @@ var askForStdInput = function(typeOfInput, req, clientToken = null){
 var join = function(){
   console.log('Please Enter your Name >');
   var req = createRequest();
-  askForStdInput('join', req)
+  askForStdInput('join', req);
 }
 
 join()

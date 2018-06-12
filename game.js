@@ -36,6 +36,8 @@ class Connect5 {
      var results = []
      results.push(this.checkHorizontal(row, icon));
      results.push(this.checkVertical(column, icon));
+     results.push(this.checkAscendingDiagonal(column, row, icon));
+     // results.push(this.checkDescendingDiagonal(column, row, icon));
      console.log(results);
    }
 
@@ -68,6 +70,48 @@ class Connect5 {
      }
      return false;
    }
+
+   checkAscendingDiagonal(column, row, icon){
+     var startCol = (column + row) % (this.rows -1);
+     var startRow = 5;
+     var numMatch =0;
+     while(startCol < this.cols && startRow >0){
+       if(this.grid[startCol][startRow] == icon){
+         numMatch += 1;
+       }
+       else{
+         numMatch = 0;
+       }
+       if(numMatch>=5){
+         return true;
+       }
+       startCol+=1;
+       startRow-=1;
+     }
+     return false;
+   }
+
+   // checkDescendingDiagonal(column, row, icon){
+   //   var startCol = column - row;
+   //   var startRow = 0;
+   //   var numMatch = 0;
+   //   while(startCol < this.cols && startRow < this.rows){
+   //     // var entry = this.grid.slice(startCol);
+   //     // console.log(entry[startRow])
+   //     if(this.grid[startCol][startRow] == icon){
+   //       numMatch += 1;
+   //     }
+   //     else{
+   //       numMatch = 0;
+   //     }
+   //     if(numMatch>=5){
+   //       return true;
+   //     }
+   //     startCol+=1;
+   //     startRow+=1;
+   //   }
+   //   return false;
+   // }
 
    pairPlayerWithOpponent(player){
      var opp = this.players.find(p => player.name != p.name);
@@ -110,7 +154,7 @@ class Connect5 {
      var gridMessage = this.getPrintableGrid()
      var gridData = JSON.stringify({
        grid : gridMessage,
-       type: 'grid',
+       type: 'moveQuery',
        token: this.generateToken(player),
        name: player.name,
        id: player.id,
@@ -137,7 +181,15 @@ class Connect5 {
      // if the player can play we send him a response
      var id = this.players.length;
      var player = new Player(name, id);
-     player.setResponseLoc(response);
+     var myTurnRequest = JSON.stringify({
+       type : 'joinSuccess',
+       name: player.name,
+       id: player.id,
+       token: this.generateToken(player)
+     })
+     response.writeHead(200, {"Content-Type": "application/json"});
+     response.end(myTurnRequest);
+     // player.setResponseLoc(response);
      this.players.push(player);
      const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
      const checkIfPlayable = async (player) => {
@@ -149,6 +201,33 @@ class Connect5 {
      checkIfPlayable(player)
    }
 
+   isColumnNotFull(column){
+     return this.grid[column][0] == '-';
+   }
+
+   isMoveInBounds(move){
+     // console.log(0 <= move< this.cols);
+     return move >=0 && move<this.cols;
+   }
+
+   checkIfValidMove(move){
+     if(!this.isMoveInBounds(move)){
+       return false;
+     }
+     return this.isColumnNotFull(move);
+   }
+
+   notifyInvalid(player, response){
+     var invalidMove = JSON.stringify({
+       type : 'moveFailure',
+       name: player.name,
+       id: player.id,
+       icon: player.gameIcon,
+       token: this.generateToken(player)
+     })
+     response.writeHead(200, {"Content-Type": "application/json"});
+     response.end(invalidMove);
+   }
 }
 
 class Player {
