@@ -59,6 +59,10 @@ server.on('request', function(req, res){
       }else{
         game.notifyInvalid(player,res);
       }
+    } else if(type == 'ping'){
+      var player = game.getPlayerWithName(body['name']);
+      player.receivedPing = true;
+      player.pingResponse = res;
     }
   });
 });

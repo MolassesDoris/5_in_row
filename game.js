@@ -162,6 +162,7 @@ class Connect5 {
      });
      response.writeHead(200, {"Content-Type": "application/json"});
      response.end(gridData);
+     // player.setResponseLoc(null);
    }
 
    handlePlayable(player){
@@ -191,6 +192,7 @@ class Connect5 {
      response.end(myTurnRequest);
      // player.setResponseLoc(response);
      this.players.push(player);
+     this.startPingCheck(player)
      const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
      const checkIfPlayable = async (player) => {
        while(this.players.length<2){
@@ -206,7 +208,6 @@ class Connect5 {
    }
 
    isMoveInBounds(move){
-     // console.log(0 <= move< this.cols);
      return move >=0 && move<this.cols;
    }
 
@@ -228,6 +229,37 @@ class Connect5 {
      response.writeHead(200, {"Content-Type": "application/json"});
      response.end(invalidMove);
    }
+
+   startPingCheck(player){
+     const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
+     const checkPing = async(player) => {
+       while(true){
+         var updatedPlayer = this.getPlayerWithName(player.name);
+         console.log(updatedPlayer.name + ' received Ping: '+ updatedPlayer.receivedPing)
+           if(updatedPlayer.receivedPing == false){
+             const notify = function(updatedPlayer){
+               var response = updatedPlayer.opponent.pingResponse
+               var sendData = JSON.stringify({
+                 type: 'gameOver',
+                 result: 'Winner',
+                 reason: 'Opponent left has the game.'
+               })
+               response.write(sendData);
+               response.end();
+             }
+             if(updatedPlayer.opponent != null){
+               notify(updatedPlayer);
+             }
+             break;
+             process.exit()
+           }
+           updatedPlayer.receivedPing = false;
+           await snooze(10000);
+
+       }
+     };
+     checkPing(player)
+   }
 }
 
 class Player {
@@ -238,6 +270,8 @@ class Player {
     this.responseLoc = null;
     this.opponent = null;
     this.turn = 0;
+    this.receivedPing = true;
+    this.pingResponse = null;
   }
 
   setResponseLoc(responseLoc){

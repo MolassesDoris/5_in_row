@@ -29,18 +29,32 @@ var createRequest = function(){
         }
         makeMove(body['name'], body['icon'], body['token']);
       } else if(type == 'joinSuccess'){
+        pingServer(body['name'], body['id'])
+        console.log('')
         console.log('Game joined succesfully');
         console.log('Waiting for Turn');
+        console.log('')
         sendNotifyMeRequest(body['token']);
       } else if(type == 'moveSuccess'){
+        console.log('')
         for(var line of body['grid']){
           console.log(line);
         }
+        console.log('')
         sendNotifyMeRequest(body['token']);
       } else if(type == 'moveFailure'){
+        console.log('')
         console.log('I\'m sorry the move you made isn\'t valid');
         console.log('Please Enter a column between 0-8:');
+        console.log('')
         makeMove(body['name'], body['icon'], body['token']);
+      } else if(type == 'gameOver'){
+        var gameOverStr = 'You are the ' +body['result'];
+        if(body['reason'] != null){
+          gameOverStr += ' because: ' + body['reason'];
+        }
+        console.log(gameOverStr);
+        process.exit()
       }
     });
   });
@@ -64,11 +78,27 @@ var sendNotifyMeRequest = function(clientToken){
   }));
 }
 var makeMove = function(name, icon, token){
+  console.log('')
   console.log(name+ ', it is your turn!');
   console.log('Your icon is: ', icon);
   console.log('Enter a number between 0-8 to take turn:');
   var moveInputReq = createRequest()
   askForStdInput('move', moveInputReq, token);
+}
+
+var pingServer = function(playerName, playerId){
+  const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const sendPing = async (playerName, playerId) => {
+    while(true){
+      sendRequest(createRequest(), JSON.stringify({
+        type: 'ping',
+        name: playerName,
+        id: playerId
+      }));
+      await snooze(5000);
+    }
+  };
+  sendPing(playerName, playerId);
 }
 
 var askForStdInput = function(typeOfInput, req, clientToken = null){
