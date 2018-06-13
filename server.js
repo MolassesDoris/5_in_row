@@ -1,8 +1,9 @@
 var http = require('http');
-var server = http.createServer().listen(3000);
-
 var ConnectGame = require('./game').game;
+
 var game = new ConnectGame();
+var server = http.createServer().listen(3000);
+console.log('Waiting for Players to Join');
 
 var handleJoin = function(name,res){
   console.log(name, ' has joined the lobby');
@@ -67,5 +68,3 @@ server.on('request', function(req, res){
     }
   });
 });
-
-console.log('Waiting for Players to Join')

@@ -29,6 +29,14 @@ class Connect5 {
      return JSON.stringify(data);
    }
 
+   handleSuccesfulUserMove(player){
+     var res = player.getResponseLoc()
+     var gridData = this.getSendableJson('moveSuccess', player);
+     res.write(gridData);
+     res.end();
+     this.askForMove(player.opponent);
+   }
+
    makeMove(column, player){
      var i = (this.grid[column].length)-1;
      while(i >= 0){
@@ -38,19 +46,12 @@ class Connect5 {
        }
        i-=1
      }
-     for(var entry of this.getPrintableGrid()){
-       console.log(entry)
-     }
      player.turn+=1;
      var gameOver = this.checkWinner(player, column, i);
      if(gameOver){
        this.notifyPlayersResult(player);
      }else{
-       var res = player.getResponseLoc()
-       var gridData = this.getSendableJson('moveSuccess', player);
-       res.write(gridData);
-       res.end();
-       this.askForMove(player.opponent);
+       this.handleSuccesfulUserMove(player);
      }
    }
 
