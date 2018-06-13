@@ -59,20 +59,18 @@ class Connect5 {
 
    notifyPlayersResult(winner){
      var winnerRes = winner.getResponseLoc();
-     var winData = JSON.stringify({
+     var sendData = {
+       grid: this.getPrintableGrid(),
        type: 'gameOver',
        result: 'Winner',
        reason: null
-     });
+     };
+     var winData = JSON.stringify(sendData);
      winnerRes.write(winData);
      winnerRes.end();
      var loserRes = winner.opponent.getResponseLoc();
-     var loseData = JSON.stringify({
-       type: 'gameOver',
-       result: 'Loser',
-       reason: null
-     })
-     loserRes.write(loseData);
+     sendData['result'] = 'Loser';
+     loserRes.write(JSON.stringify(sendData));
      loserRes.end('', this.endGame);
    }
 
@@ -163,7 +161,7 @@ class Connect5 {
      colNums = colNums.map(x=> x.toString()).join('   ');
      var printable = [];
      printable.push(colNums);
-     printable.push('================================');
+     printable.push('=================================');
      for(var i=0; i <= this.rows-1; i++){
        var cleanedRow = [];
        for(var j=0; j <= this.cols-1; j++){
@@ -202,12 +200,9 @@ class Connect5 {
      });
      response.writeHead(200, {"Content-Type": "application/json"});
      response.end(gridData);
-     // player.setResponseLoc(null);
    }
 
    handlePlayable(player){
-     console.log('Players can play now');
-     console.log(player.name + ' can play');
      this.pairPlayerWithOpponent(player);
      if(player.id<player.opponent.id){
        player.gameIcon = 'X';
@@ -217,9 +212,6 @@ class Connect5 {
    }
 
    createNewPlayer(name, response = null) {
-     // Create new players
-     // add player to list of game players
-     // if the player can play we send him a response
      var id = this.players.length;
      var player = new Player(name, id);
      var myTurnRequest = JSON.stringify({
@@ -230,7 +222,6 @@ class Connect5 {
      })
      response.writeHead(200, {"Content-Type": "application/json"});
      response.end(myTurnRequest);
-     // player.setResponseLoc(response);
      this.players.push(player);
      this.startPingCheck(player)
      const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -276,7 +267,6 @@ class Connect5 {
      const checkPing = async(player, endFunction) => {
        while(true){
          var updatedPlayer = this.getPlayerWithName(player.name);
-         console.log(updatedPlayer.name + ' received Ping: '+ updatedPlayer.receivedPing)
            if(updatedPlayer.receivedPing == false){
              const notify = function(updatedPlayer, endFunction){
                var response = updatedPlayer.opponent.pingResponse

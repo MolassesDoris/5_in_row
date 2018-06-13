@@ -1,5 +1,4 @@
 var http = require('http');
-var querystring = require('querystring');
 var stdin = process.stdin, stdout = process.stdout
 var options = {
   hostname : 'localhost',
@@ -18,43 +17,24 @@ var createRequest = function(){
       body = data;
     });
     res.on('end', function(){
-      // console.log(body)
       body = JSON.parse(body);
       var type = body['type'];
-      if(type == 'message'){
-        console.log(body['msg'])
-      }else if(type == 'moveQuery'){
-        for(var line of body['grid']){
-          console.log(line);
-        }
-        makeMove(body['name'], body['icon'], body['token']);
-      } else if(type == 'joinSuccess'){
-        pingServer(body['name'], body['id'])
-        console.log('')
-        console.log('Game joined succesfully');
-        console.log('Waiting for Turn');
-        console.log('')
-        sendNotifyMeRequest(body['token']);
-      } else if(type == 'moveSuccess'){
-        console.log('')
-        for(var line of body['grid']){
-          console.log(line);
-        }
-        console.log('')
-        sendNotifyMeRequest(body['token']);
-      } else if(type == 'moveFailure'){
-        console.log('')
-        console.log('I\'m sorry the move you made isn\'t valid');
-        console.log('Please Enter a column between 0-8:');
-        console.log('')
-        makeMove(body['name'], body['icon'], body['token']);
-      } else if(type == 'gameOver'){
-        var gameOverStr = 'GAME OVER: You are the ' +body['result'];
-        if(body['reason'] != null){
-          gameOverStr += ' because: ' + body['reason'];
-        }
-        console.log(gameOverStr);
-        process.exit()
+      switch(type){
+        case 'moveQuery':
+          handleMoveQuery(body);
+          break;
+        case 'joinSuccess':
+          handleJoinSuccess(body);
+          break;
+        case 'moveSuccess':
+          handleMoveSuccess(body);
+          break;
+        case 'moveFailure':
+          handleMoveFailure(body);
+          break;
+        case 'gameOver':
+          handleGameOver(body);
+          break;
       }
     });
   });
@@ -64,6 +44,54 @@ var createRequest = function(){
   });
 
   return req;
+}
+
+var printGrid = function(grid){
+  console.log('');
+  for(var line of grid){
+    console.log(line);
+  }
+  console.log('');
+}
+
+var handleMoveQuery = function(body){
+  printGrid(body['grid']);
+  makeMove(body['name'], body['icon'], body['token']);
+}
+
+var handleJoinSuccess = function(body){
+  pingServer(body['name'], body['id'])
+  console.log('')
+  console.log('Game joined succesfully');
+  console.log('Waiting for Turn');
+  console.log('')
+  sendNotifyMeRequest(body['token']);
+}
+var handleMoveSuccess = function(body){
+  printGrid(body['grid']);
+  sendNotifyMeRequest(body['token']);
+}
+
+var handleMoveFailure = function(body){
+  console.log('')
+  console.log('I\'m sorry the move you made isn\'t valid');
+  console.log('Please Enter a column between 0-8:');
+  console.log('')
+  makeMove(body['name'], body['icon'], body['token']);
+}
+
+var handleGameOver = function(body){
+  console.log('')
+  for(var line of body['grid']){
+    console.log(line);
+  }
+  console.log('');
+  var gameOverStr = 'GAME OVER: You are the ' +body['result'];
+  if(body['reason'] != null){
+    gameOverStr += ' because: ' + body['reason'];
+  }
+  console.log(gameOverStr);
+  process.exit()
 }
 
 var sendRequest = function(req, data){
@@ -78,7 +106,7 @@ var sendNotifyMeRequest = function(clientToken){
   }));
 }
 var makeMove = function(name, icon, token){
-  console.log('')
+  console.log('');
   console.log(name+ ', it is your turn!');
   console.log('Your icon is: ', icon);
   console.log('Enter a number between 0-8 to take turn:');

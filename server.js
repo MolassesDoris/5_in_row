@@ -1,13 +1,12 @@
 var http = require('http');
-// var querystring = require('querystring');
 var server = http.createServer().listen(3000);
 
 var ConnectGame = require('./game').game;
 var game = new ConnectGame();
 
-var onJoin = function(body,res){
-  console.log(body['data'], ' has joined the lobby');
-  game.createNewPlayer(body['data'], res);
+var handleJoin = function(name,res){
+  console.log(name, ' has joined the lobby');
+  game.createNewPlayer(name, res);
   }
 
 var getPlayerFromToken = function(token){
@@ -21,40 +20,52 @@ var handleValidMove = function(player, move, res){
   game.makeMove(move, player);
 }
 
+var handleNotifyMe = function(token, res){
+  var player = getPlayerFromToken(token);
+  player.setResponseLoc(res);
+}
+
+var handleMove = function(move, token, res){
+  var player = getPlayerFromToken(token);
+  if(game.checkIfValidMove(move)){
+    handleValidMove(player, move, res);
+  }else{
+    game.notifyInvalid(player,res);
+  }
+}
+
+var handlePing = function(playerName, res){
+  var player = game.getPlayerWithName(playerName);
+  player.receivedPing = true;
+  player.pingResponse = res;
+}
+
 server.on('request', function(req, res){
   if (req.method == 'POST'){
-    console.log('Received Post')
     var body = '';
   }
   req.on('data', function(data){
     body+=data;
   });
-  // req.on("close", function(err) {
-  //   // request closed unexpectedly
-  //   console.log('Closed unexpectedly')
-  // });
   req.on('end', function(){
     body = JSON.parse(body);
     var type = body['type'];
-    if(type == 'join'){
-      onJoin(body, res);
-    }else if(type == 'notifyMe'){
-      var player = getPlayerFromToken(body['token']);
-      player.setResponseLoc(res);
-    }else if(type == 'move'){
-      console.log('Received Move')
-      var move = parseInt(body['data']);
-      var player = getPlayerFromToken(body['token']);
-      if(game.checkIfValidMove(move)){
-        handleValidMove(player, move, res);
-      }else{
-        game.notifyInvalid(player,res);
-      }
-    } else if(type == 'ping'){
-      var player = game.getPlayerWithName(body['name']);
-      player.receivedPing = true;
-      player.pingResponse = res;
+    switch(type){
+      case 'join':
+        handleJoin(body['data'], res);
+        break;
+      case 'notifyMe':
+        handleNotifyMe(body['token'], res);
+        break;
+      case 'move':
+        var move = parseInt(body['data']);
+        handleMove(move, body['token'], res);
+        break;
+      case 'ping':
+        handlePing(body['name'], res);
+        break;
     }
   });
 });
+
 console.log('Waiting for Players to Join')
