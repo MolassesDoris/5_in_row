@@ -28,8 +28,23 @@ class Connect5 {
        console.log(entry)
      }
      player.turn+=1;
-     this.checkWinner(player, column, i);
-     this.askForMove(player.opponent);
+     var gameOver = this.checkWinner(player, column, i);
+     if(gameOver){
+       this.notifyPlayersResult(player);
+     }else{
+       var res = player.getResponseLoc()
+       var gridData = JSON.stringify({
+         grid : this.getPrintableGrid(),
+         type: 'moveSuccess',
+         token: this.generateToken(player),
+         name: player.name,
+         id: player.id,
+         icon: player.gameIcon
+       });
+       res.write(gridData);
+       res.end();
+       this.askForMove(player.opponent);
+     }
    }
 
    checkWinner(player, column, row){
@@ -39,9 +54,7 @@ class Connect5 {
      results.push(this.checkVertical(column, icon));
      results.push(this.checkAscendingDiagonal(column, row, icon));
      results.push(this.checkDescendingDiagonal(column, row, icon));
-     if(results.includes(true)){
-       this.notifyPlayersResult(player)
-     }
+     return(results.includes(true));
    }
 
    notifyPlayersResult(winner){
@@ -60,7 +73,7 @@ class Connect5 {
        reason: null
      })
      loserRes.write(loseData);
-     loserRes.end();
+     loserRes.end('', this.endGame);
    }
 
    checkHorizontal(row, icon){
@@ -139,28 +152,6 @@ class Connect5 {
      }
      return false;
    }
-
-   // checkDescendingDiagonal(column, row, icon){
-   //   var startCol = column - row;
-   //   var startRow = 0;
-   //   var numMatch = 0;
-   //   while(startCol < this.cols && startRow < this.rows){
-   //     // var entry = this.grid.slice(startCol);
-   //     // console.log(entry[startRow])
-   //     if(this.grid[startCol][startRow] == icon){
-   //       numMatch += 1;
-   //     }
-   //     else{
-   //       numMatch = 0;
-   //     }
-   //     if(numMatch>=5){
-   //       return true;
-   //     }
-   //     startCol+=1;
-   //     startRow+=1;
-   //   }
-   //   return false;
-   // }
 
    pairPlayerWithOpponent(player){
      var opp = this.players.find(p => player.name != p.name);
@@ -281,12 +272,13 @@ class Connect5 {
 
    startPingCheck(player){
      const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
-     const checkPing = async(player) => {
+     var endFunction = this.endGame;
+     const checkPing = async(player, endFunction) => {
        while(true){
          var updatedPlayer = this.getPlayerWithName(player.name);
          console.log(updatedPlayer.name + ' received Ping: '+ updatedPlayer.receivedPing)
            if(updatedPlayer.receivedPing == false){
-             const notify = function(updatedPlayer){
+             const notify = function(updatedPlayer, endFunction){
                var response = updatedPlayer.opponent.pingResponse
                var sendData = JSON.stringify({
                  type: 'gameOver',
@@ -294,20 +286,23 @@ class Connect5 {
                  reason: 'Opponent has left the game.'
                })
                response.write(sendData);
-               response.end();
+               response.end('', endFunction);
              }
              if(updatedPlayer.opponent != null){
-               notify(updatedPlayer);
+               notify(updatedPlayer, endFunction);
              }
              break;
-             process.exit()
            }
            updatedPlayer.receivedPing = false;
            await snooze(10000);
 
        }
      };
-     checkPing(player)
+     checkPing(player, endFunction);
+   }
+
+   endGame(){
+     process.exit();
    }
 }
 

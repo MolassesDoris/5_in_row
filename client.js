@@ -49,7 +49,7 @@ var createRequest = function(){
         console.log('')
         makeMove(body['name'], body['icon'], body['token']);
       } else if(type == 'gameOver'){
-        var gameOverStr = 'You are the ' +body['result'];
+        var gameOverStr = 'GAME OVER: You are the ' +body['result'];
         if(body['reason'] != null){
           gameOverStr += ' because: ' + body['reason'];
         }

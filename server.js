@@ -19,16 +19,6 @@ var getPlayerFromToken = function(token){
 var handleValidMove = function(player, move, res){
   player.setResponseLoc(res);
   game.makeMove(move, player);
-  var gridData = JSON.stringify({
-    grid : game.getPrintableGrid(),
-    type: 'moveSuccess',
-    token: game.generateToken(player),
-    name: player.name,
-    id: player.id,
-    icon: player.gameIcon
-  });
-  res.write(gridData);
-  res.end();
 }
 
 server.on('request', function(req, res){
