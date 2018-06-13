@@ -15,6 +15,20 @@ class Connect5 {
       this.pairedPlayers= []
    }
 
+   getSendableJson(type, player, gameResult=null, gameReason=null){
+     var data = {
+       grid : this.getPrintableGrid(),
+       type: type,
+       token: this.generateToken(player),
+       name: player.name,
+       id: player.id,
+       icon: player.gameIcon,
+       result: gameResult,
+       reason :gameReason
+     }
+     return JSON.stringify(data);
+   }
+
    makeMove(column, player){
      var i = (this.grid[column].length)-1;
      while(i >= 0){
@@ -33,14 +47,7 @@ class Connect5 {
        this.notifyPlayersResult(player);
      }else{
        var res = player.getResponseLoc()
-       var gridData = JSON.stringify({
-         grid : this.getPrintableGrid(),
-         type: 'moveSuccess',
-         token: this.generateToken(player),
-         name: player.name,
-         id: player.id,
-         icon: player.gameIcon
-       });
+       var gridData = this.getSendableJson('moveSuccess', player);
        res.write(gridData);
        res.end();
        this.askForMove(player.opponent);
@@ -59,18 +66,10 @@ class Connect5 {
 
    notifyPlayersResult(winner){
      var winnerRes = winner.getResponseLoc();
-     var sendData = {
-       grid: this.getPrintableGrid(),
-       type: 'gameOver',
-       result: 'Winner',
-       reason: null
-     };
-     var winData = JSON.stringify(sendData);
-     winnerRes.write(winData);
+     winnerRes.write(this.getSendableJson('gameOver', winner, 'Winner'));
      winnerRes.end();
      var loserRes = winner.opponent.getResponseLoc();
-     sendData['result'] = 'Loser';
-     loserRes.write(JSON.stringify(sendData));
+     loserRes.write(this.getSendableJson('gameOver', winner.opponent, 'Loser'));
      loserRes.end('', this.endGame);
    }
 
@@ -189,15 +188,7 @@ class Connect5 {
 
    askForMove(player){
      var response = player.getResponseLoc();
-     var gridMessage = this.getPrintableGrid()
-     var gridData = JSON.stringify({
-       grid : gridMessage,
-       type: 'moveQuery',
-       token: this.generateToken(player),
-       name: player.name,
-       id: player.id,
-       icon: player.gameIcon
-     });
+     var gridData = this.getSendableJson('moveQuery', player);
      response.writeHead(200, {"Content-Type": "application/json"});
      response.end(gridData);
    }
@@ -214,12 +205,7 @@ class Connect5 {
    createNewPlayer(name, response = null) {
      var id = this.players.length;
      var player = new Player(name, id);
-     var myTurnRequest = JSON.stringify({
-       type : 'joinSuccess',
-       name: player.name,
-       id: player.id,
-       token: this.generateToken(player)
-     })
+     var myTurnRequest = this.getSendableJson('joinSuccess', player);
      response.writeHead(200, {"Content-Type": "application/json"});
      response.end(myTurnRequest);
      this.players.push(player);
@@ -250,13 +236,7 @@ class Connect5 {
    }
 
    notifyInvalid(player, response){
-     var invalidMove = JSON.stringify({
-       type : 'moveFailure',
-       name: player.name,
-       id: player.id,
-       icon: player.gameIcon,
-       token: this.generateToken(player)
-     })
+     var invalidMove = this.getSendableJson('moveFailure', player);
      response.writeHead(200, {"Content-Type": "application/json"});
      response.end(invalidMove);
    }
@@ -264,22 +244,18 @@ class Connect5 {
    startPingCheck(player){
      const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
      var endFunction = this.endGame;
-     const checkPing = async(player, endFunction) => {
+     var heartBeatBroken = this.getSendableJson('gameOver', player, 'Winner', 'opponent has left the game.');
+     const checkPing = async(player, msg, endFunction) => {
        while(true){
          var updatedPlayer = this.getPlayerWithName(player.name);
            if(updatedPlayer.receivedPing == false){
-             const notify = function(updatedPlayer, endFunction){
+             const notify = function(updatedPlayer, msg, endFunction){
                var response = updatedPlayer.opponent.pingResponse
-               var sendData = JSON.stringify({
-                 type: 'gameOver',
-                 result: 'Winner',
-                 reason: 'Opponent has left the game.'
-               })
-               response.write(sendData);
+               response.write(msg);
                response.end('', endFunction);
              }
              if(updatedPlayer.opponent != null){
-               notify(updatedPlayer, endFunction);
+               notify(updatedPlayer, msg, endFunction);
              }
              break;
            }
@@ -288,7 +264,7 @@ class Connect5 {
 
        }
      };
-     checkPing(player, endFunction);
+     checkPing(player, heartBeatBroken, endFunction);
    }
 
    endGame(){

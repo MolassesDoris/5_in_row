@@ -33,6 +33,7 @@ var createRequest = function(){
           handleMoveFailure(body);
           break;
         case 'gameOver':
+          console.log('Game Over');
           handleGameOver(body);
           break;
       }
