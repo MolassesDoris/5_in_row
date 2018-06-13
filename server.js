@@ -17,6 +17,7 @@ var getPlayerFromToken = function(token){
 }
 
 var handleValidMove = function(player, move, res){
+  player.setResponseLoc(res);
   game.makeMove(move, player);
   var gridData = JSON.stringify({
     grid : game.getPrintableGrid(),

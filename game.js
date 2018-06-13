@@ -28,17 +28,39 @@ class Connect5 {
        console.log(entry)
      }
      player.turn+=1;
-     this.checkWinner(column, i, String(player.gameIcon))
+     this.checkWinner(player, column, i);
      this.askForMove(player.opponent);
    }
 
-   checkWinner(column, row, icon){
+   checkWinner(player, column, row){
+     var icon = String(player.gameIcon)
      var results = []
      results.push(this.checkHorizontal(row, icon));
      results.push(this.checkVertical(column, icon));
      results.push(this.checkAscendingDiagonal(column, row, icon));
      results.push(this.checkDescendingDiagonal(column, row, icon));
-     console.log(results);
+     if(results.includes(true)){
+       this.notifyPlayersResult(player)
+     }
+   }
+
+   notifyPlayersResult(winner){
+     var winnerRes = winner.getResponseLoc();
+     var winData = JSON.stringify({
+       type: 'gameOver',
+       result: 'Winner',
+       reason: null
+     });
+     winnerRes.write(winData);
+     winnerRes.end();
+     var loserRes = winner.opponent.getResponseLoc();
+     var loseData = JSON.stringify({
+       type: 'gameOver',
+       result: 'Loser',
+       reason: null
+     })
+     loserRes.write(loseData);
+     loserRes.end();
    }
 
    checkHorizontal(row, icon){
@@ -98,10 +120,8 @@ class Connect5 {
        startCol = column - row;
        startRow = 0;
      }else if(column<row){
-       console.log(row + ' - ' + column)
        startCol = Math.max(column-row, 0);
        startRow = (row-column) == 1 ? 1 : (row-column)
-       console.log(startCol, startRow)
      }
      var numMatched = 0;
      while(startCol < this.cols && startRow < this.rows){
@@ -117,16 +137,7 @@ class Connect5 {
        startCol+=1;
        startRow+=1;
      }
-     console.log('NumMatches: '+numMatched);
      return false;
-    //  while(startCol < this.cols && startRow < this.rows && numMatched < 5) {
-    //    startCol+=1;
-    //    startRow+=1;
-    //    numMatched = (this.grid[startCol][startRow] == icon) ? (numMatched+1) : 0;
-    //  }
-
-
-    //  return (numMatched >=5 ) ? true : false;
    }
 
    // checkDescendingDiagonal(column, row, icon){
