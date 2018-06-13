@@ -37,7 +37,7 @@ class Connect5 {
      results.push(this.checkHorizontal(row, icon));
      results.push(this.checkVertical(column, icon));
      results.push(this.checkAscendingDiagonal(column, row, icon));
-     // results.push(this.checkDescendingDiagonal(column, row, icon));
+     results.push(this.checkDescendingDiagonal(column, row, icon));
      console.log(results);
    }
 
@@ -89,6 +89,44 @@ class Connect5 {
        startRow-=1;
      }
      return false;
+   }
+
+   checkDescendingDiagonal(column, row, icon){
+     var startRow = 0;
+     var startCol = 0;
+     if(column>row){
+       startCol = column - row;
+       startRow = 0;
+     }else if(column<row){
+       console.log(row + ' - ' + column)
+       startCol = Math.max(column-row, 0);
+       startRow = (row-column) == 1 ? 1 : (row-column)
+       console.log(startCol, startRow)
+     }
+     var numMatched = 0;
+     while(startCol < this.cols && startRow < this.rows){
+       if(this.grid[startCol][startRow] == icon){
+         numMatched += 1;
+       }
+       else{
+         numMatched = 0;
+       }
+       if(numMatched>=5){
+         return true;
+       }
+       startCol+=1;
+       startRow+=1;
+     }
+     console.log('NumMatches: '+numMatched);
+     return false;
+    //  while(startCol < this.cols && startRow < this.rows && numMatched < 5) {
+    //    startCol+=1;
+    //    startRow+=1;
+    //    numMatched = (this.grid[startCol][startRow] == icon) ? (numMatched+1) : 0;
+    //  }
+
+
+    //  return (numMatched >=5 ) ? true : false;
    }
 
    // checkDescendingDiagonal(column, row, icon){
@@ -242,7 +280,7 @@ class Connect5 {
                var sendData = JSON.stringify({
                  type: 'gameOver',
                  result: 'Winner',
-                 reason: 'Opponent left has the game.'
+                 reason: 'Opponent has left the game.'
                })
                response.write(sendData);
                response.end();
