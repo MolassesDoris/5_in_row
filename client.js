@@ -67,36 +67,31 @@ var handleMoveQuery = function(body){
 
 var handleJoinSuccess = function(body){
   pingServer(body['name'], body['id'])
-  console.log('')
-  console.log('Game joined succesfully');
-  console.log('Waiting for Turn');
-  console.log('')
+  var str = 'Game joined successfully'+'\n'+'Waiting for turn';
+  printClean(str);
   sendNotifyMeRequest(body['token']);
 }
 var handleMoveSuccess = function(body){
   printGrid(body['grid']);
+  var str = 'Waiting for opponent to make turn';
+  printClean(str);
   sendNotifyMeRequest(body['token']);
 }
 
 var handleMoveFailure = function(body){
-  console.log('')
-  console.log('I\'m sorry the move you made isn\'t valid');
-  console.log('Please Enter a column between 0-8:');
-  console.log('')
+  var str = 'I\'m sorry the move you made isn\'t valid';
+  str+='\n'+'Please enter a column number between 0-8:';
+  console.log(str);
   makeMove(body['name'], body['icon'], body['token']);
 }
 
 var handleGameOver = function(body){
-  console.log('')
-  for(var line of body['grid']){
-    console.log(line);
-  }
-  console.log('');
+  printGrid(body['grid']);
   var gameOverStr = 'GAME OVER: You are the ' +body['result'];
   if(body['reason'] != null){
-    gameOverStr += ' because: ' + body['reason'];
+    gameOverStr += ' because: ' + '\n' +body['reason'];
   }
-  console.log(gameOverStr);
+  printClean(gameOverStr);
   process.exit()
 }
 
@@ -113,9 +108,8 @@ var sendNotifyMeRequest = function(clientToken){
 }
 
 var makeMove = function(name, icon, token){
-  console.log('');
-  console.log(name+ ', it is your turn!');
-  console.log('Your icon is: ', icon);
+  var str = name+ ', it is your turn!'+'\n'+'Your icon is: '+icon;
+  printClean(str);
   console.log('Enter a number between 0-8 to take turn:');
   var moveInputReq = createRequest()
   askForStdInput('move', moveInputReq, token);
@@ -151,13 +145,23 @@ var askForStdInput = function(typeOfInput, req, clientToken = null){
   );
 }
 
+var printClean = function(str){
+  console.log('*********************************');
+  console.log(str);
+  console.log('*********************************');
+}
+
 var join = function(){
+  var str = 'This is 5-in-a-Row.'+'\n'+'You must get 5 of your pieces in a row to win!';
+  printClean(str);
   console.log('Please Enter your Name >');
   var req = createRequest();
   askForStdInput('join', req);
 }
 
-join()
+if (require.main === module) {
+  join();
+}
 
 module.exports = {
   createRequest : createRequest,

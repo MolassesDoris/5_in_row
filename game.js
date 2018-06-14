@@ -247,7 +247,7 @@ class Connect5 {
    startPingCheck(player){
      const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
      var endFunction = this.endGame;
-     var endReason = 'opponent has left the game.'
+     var endReason = 'Opponent has left the game.'
      var heartBeatBroken = this.getSendableJson('gameOver', player, 'Winner', endReason);
 
      const checkPing = async(player, msg, endFunction) => {

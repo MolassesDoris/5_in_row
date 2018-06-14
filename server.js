@@ -5,6 +5,36 @@ var game = new ConnectGame();
 var server = http.createServer().listen(3000);
 console.log('Waiting for Players to Join');
 
+server.on('request', function(req, res){
+  if (req.method == 'POST'){
+    var body = '';
+  }
+  req.on('data', function(data){
+    body+=data;
+  });
+  req.on('end', function(){
+    body = JSON.parse(body);
+    var type = body['type'];
+
+    switch(type){
+      case 'join':
+        handleJoin(body['data'], res);
+        break;
+      case 'notifyMe':
+        handleNotifyMe(body['token'], res);
+        break;
+      case 'move':
+        var move = parseInt(body['data']);
+        handleMove(move, body['token'], res);
+        break;
+      case 'ping':
+        handlePing(body['name'], res);
+        break;
+    }
+
+  });
+});
+
 var handleJoin = function(name,res){
   console.log(name, ' has joined the lobby');
   game.createNewPlayer(name, res);
@@ -40,31 +70,3 @@ var handlePing = function(playerName, res){
   player.receivedPing = true;
   player.pingResponse = res;
 }
-
-server.on('request', function(req, res){
-  if (req.method == 'POST'){
-    var body = '';
-  }
-  req.on('data', function(data){
-    body+=data;
-  });
-  req.on('end', function(){
-    body = JSON.parse(body);
-    var type = body['type'];
-    switch(type){
-      case 'join':
-        handleJoin(body['data'], res);
-        break;
-      case 'notifyMe':
-        handleNotifyMe(body['token'], res);
-        break;
-      case 'move':
-        var move = parseInt(body['data']);
-        handleMove(move, body['token'], res);
-        break;
-      case 'ping':
-        handlePing(body['name'], res);
-        break;
-    }
-  });
-});
