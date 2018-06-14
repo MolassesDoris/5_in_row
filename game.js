@@ -46,7 +46,9 @@ class Connect5 {
        }
        i-=1
      }
+
      player.turn+=1;
+
      var gameOver = this.checkWinner(player, column, i);
      if(gameOver){
        this.notifyPlayersResult(player);
@@ -245,27 +247,32 @@ class Connect5 {
    startPingCheck(player){
      const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
      var endFunction = this.endGame;
-     var heartBeatBroken = this.getSendableJson('gameOver', player, 'Winner', 'opponent has left the game.');
+     var endReason = 'opponent has left the game.'
+     var heartBeatBroken = this.getSendableJson('gameOver', player, 'Winner', endReason);
+
      const checkPing = async(player, msg, endFunction) => {
        while(true){
          var updatedPlayer = this.getPlayerWithName(player.name);
-           if(updatedPlayer.receivedPing == false){
-             const notify = function(updatedPlayer, msg, endFunction){
-               var response = updatedPlayer.opponent.pingResponse
-               response.write(msg);
-               response.end('', endFunction);
-             }
-             if(updatedPlayer.opponent != null){
-               notify(updatedPlayer, msg, endFunction);
-             }
-             break;
-           }
-           updatedPlayer.receivedPing = false;
-           await snooze(10000);
 
+         if(updatedPlayer.receivedPing == false){
+           const notify = function(updatedPlayer, msg, endFunction){
+             var response = updatedPlayer.opponent.pingResponse
+             response.write(msg);
+             response.end('', endFunction);
+           }
+
+           if(updatedPlayer.opponent != null){
+             notify(updatedPlayer, msg, endFunction);
+           }
+
+         }
+         updatedPlayer.receivedPing = false;
+         await snooze(10000);
        }
      };
+
      checkPing(player, heartBeatBroken, endFunction);
+
    }
 
    endGame(){

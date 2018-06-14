@@ -8,7 +8,7 @@ console.log('Waiting for Players to Join');
 var handleJoin = function(name,res){
   console.log(name, ' has joined the lobby');
   game.createNewPlayer(name, res);
-  }
+}
 
 var getPlayerFromToken = function(token){
   var parsedToken = game.parseToken(token);

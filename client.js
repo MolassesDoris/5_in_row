@@ -11,14 +11,18 @@ var options = {
 
 var createRequest = function(){
   var req = http.request(options, function(res){
+
     res.setEncoding('utf8');
     var body = ''
+
     res.on('data', function(data){
       body = data;
     });
+
     res.on('end', function(){
       body = JSON.parse(body);
       var type = body['type'];
+
       switch(type){
         case 'moveQuery':
           handleMoveQuery(body);
@@ -37,6 +41,7 @@ var createRequest = function(){
           handleGameOver(body);
           break;
       }
+
     });
   });
 
@@ -106,6 +111,7 @@ var sendNotifyMeRequest = function(clientToken){
     token: clientToken
   }));
 }
+
 var makeMove = function(name, icon, token){
   console.log('');
   console.log(name+ ', it is your turn!');
@@ -152,3 +158,18 @@ var join = function(){
 }
 
 join()
+
+module.exports = {
+  createRequest : createRequest,
+  printGrid: printGrid,
+  handleMoveQuery: handleMoveQuery,
+  handleJoinSuccess :handleJoinSuccess,
+  handleMoveFailure : handleMoveFailure,
+  handleGameOver : handleGameOver,
+  sendRequest : sendRequest,
+  sendNotifyMeRequest : sendNotifyMeRequest,
+  makeMove : makeMove,
+  pingServer : pingServer,
+  askForStdInput : askForStdInput,
+  join : join
+};
